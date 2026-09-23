@@ -2,22 +2,114 @@
 <html lang="ru">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Проверка доступа — сборщик ORM</title>
-  <style>
-    body { margin: 0; font-family: Arial, sans-serif; background: #f5f7fa; color: #20242a; }
-    main { max-width: 700px; margin: 12vh auto; padding: 40px; background: #fff; border-radius: 18px; box-shadow: 0 10px 32px rgba(22,32,50,.12); }
-    h1 { margin-top: 20px; font-size: 30px; }
-    .ok { display: inline-block; padding: 10px 16px; border-radius: 10px; background: #e8f7ed; color: #176b34; font-weight: 700; }
-    p { line-height: 1.55; }
-  </style>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Локальная сборка ежемесячного отчёта ORM из обезличенных Excel-файлов">
+  <title>Сборка отчёта ORM</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.27.7/full/pyodide.js"></script>
+  <script src="./app.js" defer></script>
 </head>
 <body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Онлайн-репутация</p>
+      <h1>Сборка ежемесячного отчёта</h1>
+    </div>
+    <span class="local-badge">Локальная обработка</span>
+  </header>
+
   <main>
-    <div class="ok">Доступ работает</div>
-    <h1>Тестовая страница сборщика ORM</h1>
-    <p>Если вы видите эту страницу на удалённом рабочем столе, GitHub Pages доступен с этого компьютера.</p>
-    <p>На тестовой странице нет формы, файлов клиентов и персональных данных.</p>
+    <section class="intro">
+      <div>
+        <p class="step-label">Рабочая форма ORM</p>
+        <h2>Объедините данные партнёра и сотрудников, проверьте разметку и получите аналитику</h2>
+        <p>Форма выполняет расчёты непосредственно в вашем браузере. Excel-файлы не отправляются на сервер и не сохраняются на сайте.</p>
+      </div>
+      <div class="privacy-card">
+        <div class="privacy-icon">✓</div>
+        <div>
+          <strong>Перед началом работы</strong>
+          <p>Используйте только файлы, предварительно обработанные локальным анонимайзером.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="confirmation" aria-labelledby="confirm-title">
+      <div>
+        <h3 id="confirm-title">Обязательное правило</h3>
+        <p>Загружать можно только обезличенные файлы. Выбор файла в этой форме не передаёт его на сервер — данные обрабатываются в памяти браузера.</p>
+      </div>
+      <label class="check-row">
+        <input id="privacy-confirm" type="checkbox">
+        <span>Я подтверждаю, что все загружаемые файлы обезличены</span>
+      </label>
+    </section>
+
+    <div id="engine-status" class="engine-status" role="status" aria-live="polite">
+      <span class="status-dot"></span>
+      <span>Подготавливаем обработку Excel в браузере…</span>
+    </div>
+
+    <section class="workflow-grid">
+      <article class="panel">
+        <div class="panel-number">1</div>
+        <div class="panel-heading">
+          <h3>Собрать обновлённую базу</h3>
+          <p>Загрузите три обезличенных файла и выберите отчётный месяц.</p>
+        </div>
+
+        <div class="file-grid">
+          <label class="file-field">
+            <span>Отчёт партнёра</span>
+            <small>reviews_export_обезличен.xlsx</small>
+            <input id="partner-file" type="file" accept=".xlsx">
+          </label>
+          <label class="file-field">
+            <span>Отчёт сотрудников</span>
+            <small>Работа с отзывами_обезличен.xlsx</small>
+            <input id="staff-file" type="file" accept=".xlsx">
+          </label>
+          <label class="file-field">
+            <span>Накопительная база</span>
+            <small>Динамика негатив — позитив_обезличен.xlsx</small>
+            <input id="master-file" type="file" accept=".xlsx">
+          </label>
+        </div>
+
+        <div class="action-row">
+          <label class="month-field">Отчётный месяц<input id="build-month" type="month"></label>
+          <button id="build-button" type="button" disabled>Собрать базу</button>
+        </div>
+        <div id="build-result" class="result" aria-live="polite"></div>
+      </article>
+
+      <article class="panel secondary-panel">
+        <div class="panel-number">2</div>
+        <div class="panel-heading">
+          <h3>Сформировать аналитику</h3>
+          <p>Проверьте жёлтые предложения и красные противоречия в полученной базе, сохраните исправления и загрузите файл сюда.</p>
+        </div>
+
+        <label class="file-field single-file">
+          <span>Проверенная накопительная база</span>
+          <small>Файл, полученный на первом шаге</small>
+          <input id="base-file" type="file" accept=".xlsx">
+        </label>
+
+        <div class="action-row">
+          <label class="month-field">Отчётный месяц<input id="analytics-month" type="month"></label>
+          <button id="analytics-button" type="button" disabled>Сформировать аналитику</button>
+        </div>
+        <div id="analytics-result" class="result" aria-live="polite"></div>
+      </article>
+    </section>
+
+    <section class="legend">
+      <div><span class="swatch yellow"></span><strong>Жёлтый</strong> — значение предложено программой, его нужно проверить.</div>
+      <div><span class="swatch red"></span><strong>Красный</strong> — найдено противоречие, требуется ручное решение.</div>
+    </section>
   </main>
+
+  <footer>Файлы обрабатываются только на вашем устройстве и удаляются из памяти после завершения операции.</footer>
 </body>
 </html>
